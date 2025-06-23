@@ -20,6 +20,8 @@ object_script.*.Debug
 *.pro.user.*
 *.qbs.user
 *.qbs.user.*
+**/build*
+**/*.pro.user
 *.moc
 moc_*.cpp
 moc_*.h
