@@ -115,7 +115,7 @@
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_3">
                      <item>
-                      <widget class="QCheckBox" name="checkBox_2">
+                      <widget class="QCheckBox" name="cb_ip">
                        <property name="text">
                         <string/>
                        </property>
@@ -133,7 +133,7 @@
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_9">
                      <item>
-                      <widget class="QCheckBox" name="checkBox_3">
+                      <widget class="QCheckBox" name="cb_port">
                        <property name="text">
                         <string/>
                        </property>
@@ -151,7 +151,7 @@
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout">
                      <item>
-                      <widget class="QCheckBox" name="checkBox">
+                      <widget class="QCheckBox" name="cb_login">
                        <property name="minimumSize">
                         <size>
                          <width>20</width>
@@ -170,7 +170,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QPushButton" name="pushButton">
+                      <widget class="QPushButton" name="b_saveInfo">
                        <property name="enabled">
                         <bool>false</bool>
                        </property>
@@ -284,14 +284,14 @@
                    <item>
                     <layout class="QVBoxLayout" name="verticalLayout_7">
                      <item>
-                      <widget class="QPushButton" name="b_chooseFile_2">
+                      <widget class="QPushButton" name="b_chooseFile">
                        <property name="text">
                         <string>Choose file</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QPushButton" name="b_sendFile_2">
+                      <widget class="QPushButton" name="b_sendFile">
                        <property name="text">
                         <string>Send file</string>
                        </property>
@@ -322,14 +322,14 @@
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_6">
                    <item>
-                    <widget class="QLabel" name="l_receivedFiles_2">
+                    <widget class="QLabel" name="l_sendedFiles">
                      <property name="text">
                       <string>Sended files</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QTextEdit" name="te_receivedFiles_2">
+                    <widget class="QTextEdit" name="te_sendedFiles">
                      <property name="readOnly">
                       <bool>true</bool>
                      </property>
@@ -356,14 +356,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
                    <item>
                     <layout class="QVBoxLayout" name="verticalLayout_16">
                      <item>
-                      <widget class="QLabel" name="l_sending_2">
+                      <widget class="QLabel" name="l_sending">
                        <property name="text">
                         <string>Sending </string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="l_receiving_2">
+                      <widget class="QLabel" name="l_receiving">
                        <property name="text">
                         <string>Receiving</string>
                        </property>
@@ -374,14 +374,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
                    <item>
                     <layout class="QVBoxLayout" name="verticalLayout_17">
                      <item>
-                      <widget class="QProgressBar" name="pb_sending_2">
+                      <widget class="QProgressBar" name="pb_sending">
                        <property name="value">
                         <number>0</number>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QProgressBar" name="pb_receiving_2">
+                      <widget class="QProgressBar" name="pb_receiving">
                        <property name="autoFillBackground">
                         <bool>false</bool>
                        </property>
@@ -403,14 +403,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_5">
                    <item>
-                    <widget class="QLabel" name="l_receivedFiles_3">
+                    <widget class="QLabel" name="l_receivedFiles">
                      <property name="text">
                       <string>Received files</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QTextEdit" name="te_receivedFiles_3">
+                    <widget class="QTextEdit" name="te_receivedFiles">
                      <property name="readOnly">
                       <bool>true</bool>
                      </property>
