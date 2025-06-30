@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QHostAddress>
+#include <QTcpSocket>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -18,11 +19,17 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private:
+    Ui::MainWindow *ui;
+    QTcpSocket *socket;
+    QByteArray Data;
+    void SendToServer(QString);
+
 private slots:
     void updateInfoButton();
     void login();
 
-private:
-    Ui::MainWindow *ui;
+public slots:
+    void slotReadyRead();
 };
 #endif // MAINWINDOW_H
