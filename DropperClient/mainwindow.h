@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QHostAddress>
 #include <QTcpSocket>
+#include <QFileDialog>
+#include <QFileInfo>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,11 +25,15 @@ private:
     Ui::MainWindow *ui;
     QTcpSocket *socket;
     QByteArray Data;
+    QString fileName;
+    QString filePath;
     void SendToServer(QString);
 
 private slots:
     void updateInfoButton();
     void login();
+    void chooseFile();
+    void sendFile();
 
 public slots:
     void slotReadyRead();

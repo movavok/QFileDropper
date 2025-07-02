@@ -302,9 +302,12 @@
                    <item>
                     <layout class="QVBoxLayout" name="verticalLayout_8">
                      <item>
-                      <widget class="QLabel" name="l_fileName">
+                      <widget class="QLineEdit" name="le_fileName">
                        <property name="text">
                         <string>Empty</string>
+                       </property>
+                       <property name="readOnly">
+                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
