@@ -27,19 +27,35 @@ void Server::slotReadyRead()
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_6_7);
 
-    QString message;
-    in >> message;
+    QString header;
+    in >> header;
 
     if (!logins.contains(socket)) {
-        logins[socket] = message;
-        qDebug() << "User logged in as:" << message;
+        logins[socket] = header;
+        qDebug() << "User logged in as:" << header;
         return;
     }
 
-    QString login = logins[socket];
-    QString fullMessage = login + ": " + message;
+    if (header.startsWith("FILE:")) {
+        QString fileName = header.mid(5);
+        QByteArray fileData;
+        in >> fileData;
 
-    SendToClient(fullMessage);
+        QString login = logins[socket];
+        QString fullHeader = "FILE:" + login + "@" + fileName;
+
+        QByteArray dataToSend;
+        QDataStream out(&dataToSend, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_7);
+        out << fullHeader << fileData;
+
+        for (QTcpSocket* client : Sockets) {
+            if (client != socket && client->state() == QAbstractSocket::ConnectedState)
+                client->write(dataToSend);
+        }
+
+        qDebug() << "File " << fileName << "sended to clients by " << login;
+    }
 }
 
 void Server::SendToClient(const QString& str)
