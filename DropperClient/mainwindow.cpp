@@ -107,6 +107,7 @@ void MainWindow::sendFile()
     out << QString("FILE:" + fileName);
     out << fileData;
 
+    ui->te_sendedFiles->append(fileName);
     socket->write(packet);
 }
 
