@@ -30,6 +30,7 @@ private:
     void SendToServer(QString);
 
 private slots:
+    void openNewClient();
     void updateInfoButton();
     void login();
     void chooseFile();

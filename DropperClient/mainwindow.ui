@@ -473,6 +473,28 @@ li.checked::marker { content: &quot;\2612&quot;; }
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>661</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuOpen_new">
+    <property name="title">
+     <string>Client</string>
+    </property>
+    <addaction name="actionOpen_new"/>
+   </widget>
+   <addaction name="menuOpen_new"/>
+  </widget>
+  <action name="actionOpen_new">
+   <property name="text">
+    <string>Open new</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

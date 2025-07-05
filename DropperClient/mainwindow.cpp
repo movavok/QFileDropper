@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 
+    connect(ui->actionOpen_new, &QAction::triggered, this, &MainWindow::openNewClient);
+
     ui->sb_port->setRange(1000, 65535);
     ui->le_ip->setInputMask("000.000.000.000;_");
     ui->statusbar->setStyleSheet("color: red;");
@@ -39,6 +41,12 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::openNewClient()
+{
+    MainWindow* newClient = new MainWindow();
+    newClient->show();
 }
 
 void MainWindow::SendToServer(QString str)
