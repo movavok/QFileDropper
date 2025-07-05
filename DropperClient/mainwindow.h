@@ -35,6 +35,8 @@ private slots:
     void login();
     void chooseFile();
     void sendFile();
+    void onSocketConnected();
+    void onSocketError(QAbstractSocket::SocketError);
 
 public slots:
     void slotReadyRead();

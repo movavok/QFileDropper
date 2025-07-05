@@ -24,16 +24,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->b_chooseFile, &QPushButton::clicked, this, &MainWindow::chooseFile);
     connect(ui->b_sendFile, &QPushButton::clicked, this, &MainWindow::sendFile);
 
-    connect(socket, &QTcpSocket::connected, this, [this]() {
-        qDebug() << "Connected to server!";
-        SendToServer(ui->le_login->text());
-        ui->stackedWidget->setCurrentIndex(1);
-    });
-
-    connect(socket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError socketError){
-        Q_UNUSED(socketError);
-        ui->statusbar->showMessage(socket->errorString());
-    });
+    connect(socket, &QTcpSocket::connected, this, &MainWindow::onSocketConnected);
+    connect(socket, &QTcpSocket::errorOccurred, this, &MainWindow::onSocketError);
 
     connect(ui->b_connect, &QPushButton::clicked, this, &MainWindow::login);
 }
@@ -140,6 +132,19 @@ void MainWindow::slotReadyRead()
 
         return;
     }
+}
+
+void MainWindow::onSocketConnected()
+{
+    qDebug() << "Connected to server!";
+    SendToServer(ui->le_login->text());
+    ui->stackedWidget->setCurrentIndex(1);
+}
+
+void MainWindow::onSocketError(QAbstractSocket::SocketError socketError)
+{
+    Q_UNUSED(socketError);
+    ui->statusbar->showMessage(socket->errorString());
 }
 
 void MainWindow::updateInfoButton()
