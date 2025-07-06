@@ -325,14 +325,14 @@
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_6">
                    <item>
-                    <widget class="QLabel" name="l_sendedFiles">
+                    <widget class="QLabel" name="l_sentFiles">
                      <property name="text">
-                      <string>Sended files</string>
+                      <string>Sent files</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QTextEdit" name="te_sendedFiles">
+                    <widget class="QTextEdit" name="te_sentFiles">
                      <property name="readOnly">
                       <bool>true</bool>
                      </property>

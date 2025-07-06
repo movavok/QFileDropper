@@ -95,11 +95,9 @@ void MainWindow::sendFile()
     QByteArray packet;
     QDataStream out(&packet, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_7);
-
     out << QString("FILE:" + fileName);
     out << fileData;
 
-    ui->te_sendedFiles->append(fileName);
     socket->write(packet);
 }
 
@@ -111,14 +109,26 @@ void MainWindow::slotReadyRead()
     QString header;
     in >> header;
 
+    if (header.startsWith("INFO:")) {
+        QString message = header.mid(5);
+        ui->statusbar->showMessage(message);
+        return;
+    }
+
+    if (header.startsWith("SENT:")) {
+        QString sentFile = header.mid(5);
+        ui->te_sentFiles->append(sentFile);
+        return;
+    }
+
     if (header.startsWith("FILE:")) {
         QString fileName = header.mid(5);
 
         QByteArray fileData;
         in >> fileData;
 
-        QDir dir("Received files");
-        if (!dir.exists()) dir.mkpath("Received files");
+        QDir dir("../../Received files");
+        if (!dir.exists()) dir.mkpath(".");
 
         QString savePath = dir.filePath(fileName);
         QFile file(savePath);
