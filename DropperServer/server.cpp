@@ -12,10 +12,11 @@ void Server::incomingConnection(qintptr socketDescriptor)
 {
     QTcpSocket* socket = new QTcpSocket(this);
     socket->setSocketDescriptor(socketDescriptor);
+
     connect(socket, &QTcpSocket::readyRead, this, &Server::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, this, &Server::clientDisconnected);
 
-    Sockets.push_back(socket);
+    Sockets.append(socket);
     qDebug() << "Client has been connected" << socketDescriptor;
 }
 
@@ -71,6 +72,12 @@ void Server::slotReadyRead()
         confirmOut.setVersion(QDataStream::Qt_6_7);
         confirmOut << QString("SENT:" + fileName);
         socket->write(confirm);
+    }
+
+    if (header.startsWith("DISCONNECT:")) {
+        qDebug() << "Client requested disconnect:" << logins.value(socket, "Unknown");
+        socket->disconnectFromHost();
+        return;
     }
 }
 

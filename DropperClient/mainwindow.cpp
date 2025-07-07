@@ -41,6 +41,16 @@ void MainWindow::openNewClient()
     newClient->show();
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (socket->state() == QAbstractSocket::ConnectedState) {
+        SendToServer("DISCONNECT:" + ui->le_login->text());
+        socket->disconnectFromHost();
+        socket->waitForDisconnected(3000);
+    }
+    QMainWindow::closeEvent(event);
+}
+
 void MainWindow::SendToServer(QString str)
 {
     Data.clear();
