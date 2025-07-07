@@ -7,15 +7,15 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->sb_port->setRange(1000, 65535);
+    ui->le_ip->setInputMask("000.000.000.000;_");
+    ui->statusbar->setStyleSheet("color: red;");
+
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 
     connect(ui->actionOpen_new, &QAction::triggered, this, &MainWindow::openNewClient);
-
-    ui->sb_port->setRange(1000, 65535);
-    ui->le_ip->setInputMask("000.000.000.000;_");
-    ui->statusbar->setStyleSheet("color: red;");
 
     connect(ui->cb_ip,    &QCheckBox::stateChanged, this, &MainWindow::updateInfoButton);
     connect(ui->cb_port,  &QCheckBox::stateChanged, this, &MainWindow::updateInfoButton);
@@ -101,6 +101,41 @@ void MainWindow::sendFile()
     socket->write(packet);
 }
 
+void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fileData)
+{
+    QDir dir("../../Received files");
+    if (!dir.exists()) dir.mkpath(".");
+
+    QString savePath = dir.filePath(fileName);
+    QFile file(savePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(fileData);
+        file.close();
+        ui->te_receivedFiles->append(fileName);
+    } else {
+        ui->statusbar->showMessage("Failed to save file: " + file.errorString());
+    }
+}
+
+void MainWindow::handleMessages(const QString& header, QDataStream& in)
+{
+    QString message = header.mid(5);
+
+    if (header.startsWith("INFO:")) {
+        ui->statusbar->showMessage(message);
+        return;
+    } else if (header.startsWith("SENT:")) {
+        ui->te_sentFiles->append(message);
+        return;
+    } else if (header.startsWith("FILE:")) {
+        QString fileName = message;
+        QByteArray fileData;
+        in >> fileData;
+        saveReceivedFiles(fileName, fileData);
+        return;
+    }
+}
+
 void MainWindow::slotReadyRead()
 {
     QDataStream in(socket);
@@ -109,39 +144,7 @@ void MainWindow::slotReadyRead()
     QString header;
     in >> header;
 
-    if (header.startsWith("INFO:")) {
-        QString message = header.mid(5);
-        ui->statusbar->showMessage(message);
-        return;
-    }
-
-    if (header.startsWith("SENT:")) {
-        QString sentFile = header.mid(5);
-        ui->te_sentFiles->append(sentFile);
-        return;
-    }
-
-    if (header.startsWith("FILE:")) {
-        QString fileName = header.mid(5);
-
-        QByteArray fileData;
-        in >> fileData;
-
-        QDir dir("../../Received files");
-        if (!dir.exists()) dir.mkpath(".");
-
-        QString savePath = dir.filePath(fileName);
-        QFile file(savePath);
-        if (file.open(QIODevice::WriteOnly)) {
-            file.write(fileData);
-            file.close();
-            ui->te_receivedFiles->append(fileName);
-        } else {
-            ui->statusbar->showMessage("Failed to save file: " + file.errorString());
-        }
-
-        return;
-    }
+    handleMessages(header, in);
 }
 
 void MainWindow::onSocketConnected()

@@ -28,6 +28,8 @@ private:
     QString fileName;
     QString filePath;
     void SendToServer(QString);
+    void saveReceivedFiles(const QString&, const QByteArray&);
+    void handleMessages(const QString&, QDataStream&);
 
 private slots:
     void openNewClient();
@@ -37,8 +39,6 @@ private slots:
     void sendFile();
     void onSocketConnected();
     void onSocketError(QAbstractSocket::SocketError);
-
-public slots:
     void slotReadyRead();
 };
 #endif // MAINWINDOW_H
