@@ -13,14 +13,15 @@ class Server : public QTcpServer
 public:
     Server();
 
+protected:
+    void incomingConnection(qintptr socketDescriptor) override;
+
 private:
     QMap<QTcpSocket*, QString> logins;
     QList<QTcpSocket*> Sockets;
     QByteArray Data;
+    void sendFile(QTcpSocket*, const QString&, QDataStream&);
     void SendToClient(const QString&);
-
-public slots:
-    void incomingConnection(qintptr socketDescriptor);
 
 private slots:
     void slotReadyRead();

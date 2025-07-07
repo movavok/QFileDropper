@@ -20,6 +20,43 @@ void Server::incomingConnection(qintptr socketDescriptor)
     qDebug() << "Client has been connected" << socketDescriptor;
 }
 
+void Server::sendFile(QTcpSocket* socket, const QString& fileName, QDataStream& in)
+{
+    QByteArray fileData;
+    in >> fileData;
+
+    QString login = logins.value(socket, "Unknown");
+    QString fullHeader = "FILE:" + login + "@" + fileName;
+
+    if (Sockets.size() <= 1) { // Cancel downloading if no other clients
+        QByteArray reply;
+        QDataStream out(&reply, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_7);
+        out << QString("INFO: No other clients connected. File wasn't sent");
+        socket->write(reply);
+        qDebug() << "Upload cancelled: no other clients connected.";
+        return;
+    }
+
+    QByteArray dataToSend;
+    QDataStream sendOut(&dataToSend, QIODevice::WriteOnly);
+    sendOut.setVersion(QDataStream::Qt_6_7);
+    sendOut << fullHeader << fileData;
+
+    for (QTcpSocket* client : Sockets) {
+        if (client != socket && client->state() == QAbstractSocket::ConnectedState)
+            client->write(dataToSend);
+    }
+
+    qDebug() << "File " << fileName << "was sent to clients by " << login;
+
+    QByteArray confirm; // Confirm file sent to the clients
+    QDataStream confOut(&confirm, QIODevice::WriteOnly);
+    confOut.setVersion(QDataStream::Qt_6_7);
+    confOut << QString("SENT:" + fileName);
+    socket->write(confirm);
+}
+
 void Server::slotReadyRead()
 {
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
@@ -38,44 +75,11 @@ void Server::slotReadyRead()
     }
 
     if (header.startsWith("FILE:")) {
-        QString fileName = header.mid(5);
-        QByteArray fileData;
-        in >> fileData;
-
-        QString login = logins[socket];
-        QString fullHeader = "FILE:" + login + "@" + fileName;
-
-        if (Sockets.size() <= 1) { // cancel downloading if no other clients
-            QByteArray reply;
-            QDataStream out(&reply, QIODevice::WriteOnly);
-            out.setVersion(QDataStream::Qt_6_7);
-            out << QString("INFO: No other clients connected. File wasn't sent");
-            socket->write(reply);
-            qDebug() << "Upload cancelled: no other clients connected.";
-            return;
-        }
-
-        QByteArray dataToSend;
-        QDataStream out(&dataToSend, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_6_7);
-        out << fullHeader << fileData;
-
-        for (QTcpSocket* client : Sockets) {
-            if (client != socket && client->state() == QAbstractSocket::ConnectedState)
-                client->write(dataToSend);
-        }
-
-        qDebug() << "File " << fileName << "was sent to clients by " << login;
-
-        QByteArray confirm;
-        QDataStream confirmOut(&confirm, QIODevice::WriteOnly);
-        confirmOut.setVersion(QDataStream::Qt_6_7);
-        confirmOut << QString("SENT:" + fileName);
-        socket->write(confirm);
+        sendFile(socket, header.mid(5), in);
+        return;
     }
 
     if (header.startsWith("DISCONNECT:")) {
-        qDebug() << "Client requested disconnect:" << logins.value(socket, "Unknown");
         socket->disconnectFromHost();
         return;
     }
