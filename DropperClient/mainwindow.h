@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
+#include <iostream>
 #include <QHostAddress>
 #include <QTcpSocket>
 #include <QFileDialog>

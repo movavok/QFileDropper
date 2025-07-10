@@ -89,6 +89,9 @@ void MainWindow::chooseFile()
         fileName = fileInfo.fileName();
         qDebug() << "Selected file:" << filePath << "(" + fileName + ")";
         ui->le_fileName->setText(fileName);
+    } else {
+        qDebug() << "No files selected";
+        ui->le_fileName->setText("Empty");
     }
 }
 
@@ -133,7 +136,7 @@ void MainWindow::sendNextChunk()
     socket->write(Data);
     bytesSent += chunk.size();
     ui->pb_sending->setValue(bytesSent);
-    // Надсилаємо наступний chunk після підтвердження від сервера або одразу:
+    
     QTimer::singleShot(0, this, &MainWindow::sendNextChunk);
 }
 
@@ -157,12 +160,32 @@ void MainWindow::handleMessages(const QString& header, QDataStream& in)
 {
     if (header.startsWith("INFO:")) {
         ui->statusbar->showMessage(header.mid(5));
+        // Если сервер сообщает, что файл не отправлен — сбрасываем отправку
+        if (header.contains("No other clients connected")) {
+            if (sendingFile) {
+                sendingFile->close();
+                sendingFile->deleteLater();
+                sendingFile = nullptr;
+            }
+            bytesSent = 0;
+            ui->pb_sending->setValue(0);
+        }
+        return;
+    } else if (header == "RESET_PROGRESS") {
+        ui->pb_sending->setValue(0);
+        receiveState = FileReceiveState();
+        // Также сбрасываем отправку
+        if (sendingFile) {
+            sendingFile->close();
+            sendingFile->deleteLater();
+            sendingFile = nullptr;
+        }
+        bytesSent = 0;
         return;
     } else if (header.startsWith("SENT:")) {
         ui->te_sentFiles->append(header.mid(5));
         return;
     } else if (header.startsWith("FILE:")) {
-        // Новий формат: FILE:filename:offset:total
         QStringList parts = header.split(":");
         if (parts.size() == 4) {
             QString fname = parts[1];
@@ -177,6 +200,8 @@ void MainWindow::handleMessages(const QString& header, QDataStream& in)
                 receiveState.fileData.clear();
                 ui->pb_receiving->setMaximum(total);
                 ui->pb_receiving->setValue(0);
+                printf("\a");
+                fflush(stdout);
             }
             receiveState.fileData.append(chunk);
             receiveState.receivedBytes += chunk.size();
