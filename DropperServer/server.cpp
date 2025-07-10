@@ -1,6 +1,9 @@
 #include "server.h"
 #include <QDataStream>
 #include <QDebug>
+
+QMap<QTcpSocket*, FileReceiveState> fileStates;
+
 Server::Server()
 {
     if (this->listen(QHostAddress::Any, 8081)) qDebug() << "start";
@@ -15,23 +18,22 @@ void Server::incomingConnection(qintptr socketDescriptor)
     Sockets.append(socket);
     qDebug() << "Client has been connected" << socketDescriptor;
 }
-void Server::sendFile(QTcpSocket* socket, const QString& fileName, QDataStream& in)
+
+void Server::sendFileChunks(const QString& fileName, const QByteArray& fileData, QTcpSocket* excludeSocket)
 {
-    QByteArray fileData;
-    in >> fileData;
-    QString login = logins.value(socket, "Unknown");
-    QString fullHeader = "FILE:" + login + "@" + fileName;
-    if (Sockets.size() <= 1) {
-        SendToClient("INFO: No other clients connected. File wasn't sent", socket);
-        qDebug() << "Upload cancelled: no other clients connected.";
-        return;
+    const qint64 chunkSize = 32 * 1024;
+    qint64 totalBytes = fileData.size();
+    qint64 bytesSent = 0;
+    while (bytesSent < totalBytes) {
+        QByteArray chunk = fileData.mid(bytesSent, chunkSize);
+        QString header = QString("FILE:%1:%2:%3").arg(fileName).arg(bytesSent).arg(totalBytes);
+        for (QTcpSocket* client : Sockets) {
+            if (client != excludeSocket && client->state() == QAbstractSocket::ConnectedState) {
+                SendToClient(header, client, chunk);
+            }
+        }
+        bytesSent += chunk.size();
     }
-    for (QTcpSocket* client : Sockets) {
-        if (client != socket && client->state() == QAbstractSocket::ConnectedState)
-            SendToClient(fullHeader, client, fileData);
-    }
-    qDebug() << "File" << fileName << "was sent to clients by" << login;
-    SendToClient("SENT:" + fileName, socket);
 }
 void Server::slotReadyRead()
 {
@@ -58,9 +60,48 @@ void Server::slotReadyRead()
 
         if (!logins.contains(socket)) {
             logins[socket] = header;
-            qDebug() << "User logged in as:" << header;
+            qDebug() << "[LOGIN]" << header << "connected";
         } else if (header.startsWith("FILE:")) {
-            sendFile(socket, header.mid(5), in);
+            QStringList parts = header.split(":");
+            if (parts.size() == 4) {
+                QString fname = parts[1];
+                qint64 offset = parts[2].toLongLong();
+                qint64 total = parts[3].toLongLong();
+                QByteArray chunk;
+                in >> chunk;
+                FileReceiveState& state = fileStates[socket];
+                if (offset == 0) {
+                    state.fileName = fname;
+                    state.totalBytes = total;
+                    state.receivedBytes = 0;
+                    state.fileData.clear();
+                    qDebug() << "[RECEIVE]" << logins[socket] << "started upload:" << fname << total/1024/1024 << "MB";
+                }
+                state.fileData.append(chunk);
+                state.receivedBytes += chunk.size();
+
+                // Логування прогресу (кожні 10%)
+                int percent = int(100.0 * state.receivedBytes / state.totalBytes);
+                static int lastPercent = 0;
+                if (percent / 10 > lastPercent / 10) {
+                    qDebug() << "[RECEIVE]" << fname << percent << "%";
+                    lastPercent = percent;
+                }
+
+                if (state.receivedBytes >= state.totalBytes) {
+                    qDebug() << "[RECEIVE]" << fname << "received successfully!";
+                    if (Sockets.size() <= 1) {
+                        SendToClient("INFO: No other clients connected. File wasn't sent", socket);
+                        qDebug() << "[SEND]" << fname << "not sent: no other clients";
+                        fileStates.remove(socket);
+                        return;
+                    }
+                    qDebug() << "[SEND]" << fname << "sending to other clients...";
+                    sendFileChunks(state.fileName, state.fileData, socket);
+                    SendToClient("SENT:" + state.fileName, socket);
+                    fileStates.remove(socket);
+                }
+            }
         } else if (header.startsWith("DISCONNECT:")) {
             socket->disconnectFromHost();
         }
@@ -68,6 +109,7 @@ void Server::slotReadyRead()
         buffers[socket].remove(0, blockSize + 2);
     }
 }
+
 void Server::SendToClient(const QString& message, QTcpSocket* socket, const QByteArray& fileData)
 {
     QByteArray Data;
@@ -89,5 +131,5 @@ void Server::clientDisconnected()
     buffers.remove(socket);
     nextBlockSizes.remove(socket);
     socket->deleteLater();
-    qDebug() << "User disconnected:" << login;
+    qDebug() << "[DISCONNECT]" << login << "disconnected";
 }

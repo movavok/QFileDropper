@@ -16,10 +16,18 @@ private:
     QList<QTcpSocket*> Sockets;
     QMap<QTcpSocket*, QByteArray> buffers;
     QMap<QTcpSocket*, quint16> nextBlockSizes;
-    void sendFile(QTcpSocket*, const QString&, QDataStream&);
     void SendToClient(const QString&, QTcpSocket*, const QByteArray& = QByteArray());
+    void sendFileChunks(const QString& fileName, const QByteArray& fileData, QTcpSocket* excludeSocket);
 private slots:
     void slotReadyRead();
     void clientDisconnected();
 };
 #endif // SERVER_H
+
+struct FileReceiveState {
+    QString fileName;
+    qint64 totalBytes = 0;
+    qint64 receivedBytes = 0;
+    QByteArray fileData;
+};
+extern QMap<QTcpSocket*, FileReceiveState> fileStates;
