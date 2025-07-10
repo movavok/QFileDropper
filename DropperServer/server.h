@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QDataStream>
+#include <QDebug>
 #include <QMap>
 class Server : public QTcpServer
 {
