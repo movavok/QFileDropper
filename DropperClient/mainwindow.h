@@ -1,39 +1,33 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
 #include <QMainWindow>
 #include <QHostAddress>
 #include <QTcpSocket>
 #include <QFileDialog>
 #include <QFileInfo>
-
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
 protected:
     void closeEvent(QCloseEvent *event) override;
-
 private:
     Ui::MainWindow *ui;
     QTcpSocket *socket;
-    QByteArray Data;
+    QByteArray buffer;
     QString fileName;
     QString filePath;
-    void SendToServer(QString);
+    quint16 nextBlockSize = 0;
+    void SendToServer(const QString&, const QByteArray& = QByteArray());
     void saveReceivedFiles(const QString&, const QByteArray&);
     void handleMessages(const QString&, QDataStream&);
-
 private slots:
     void openNewClient();
     void updateInfoButton();

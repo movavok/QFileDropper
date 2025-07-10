@@ -46,17 +46,21 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if (socket->state() == QAbstractSocket::ConnectedState) {
         SendToServer("DISCONNECT:" + ui->le_login->text());
         socket->disconnectFromHost();
-        socket->waitForDisconnected(3000);
     }
     QMainWindow::closeEvent(event);
 }
 
-void MainWindow::SendToServer(QString str)
+void MainWindow::SendToServer(const QString& header, const QByteArray& fileData)
 {
-    Data.clear();
+    QByteArray Data;
     QDataStream out(&Data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_7);
-    out << str;
+    out << quint16(0) << header;
+
+    if (!fileData.isEmpty()) out << fileData;
+
+    out.device()->seek(0);
+    out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
 }
 
@@ -102,13 +106,7 @@ void MainWindow::sendFile()
     QByteArray fileData = file.readAll();
     file.close();
 
-    QByteArray packet;
-    QDataStream out(&packet, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_7);
-    out << QString("FILE:" + fileName);
-    out << fileData;
-
-    socket->write(packet);
+    SendToServer("FILE:" + fileName, fileData);
 }
 
 void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fileData)
@@ -148,13 +146,29 @@ void MainWindow::handleMessages(const QString& header, QDataStream& in)
 
 void MainWindow::slotReadyRead()
 {
-    QDataStream in(socket);
-    in.setVersion(QDataStream::Qt_6_7);
+    buffer.append(socket->readAll());
 
-    QString header;
-    in >> header;
+    while (true) {
+        if (buffer.size() < 2) break;
 
-    handleMessages(header, in);
+        QDataStream sizeStream(buffer);
+        sizeStream.setVersion(QDataStream::Qt_6_7);
+        quint16 blockSize = 0;
+        sizeStream >> blockSize;
+
+        if (buffer.size() < blockSize + 2) break;
+
+        QByteArray fullBlock = buffer.mid(2, blockSize);
+        QDataStream in(&fullBlock, QIODevice::ReadOnly);
+        in.setVersion(QDataStream::Qt_6_7);
+
+        QString header;
+        in >> header;
+
+        handleMessages(header, in);
+
+        buffer.remove(0, blockSize + 2);
+    }
 }
 
 void MainWindow::onSocketConnected()
@@ -162,6 +176,7 @@ void MainWindow::onSocketConnected()
     qDebug() << "Connected to server!";
     SendToServer(ui->le_login->text());
     ui->stackedWidget->setCurrentIndex(1);
+    ui->statusbar->clearMessage();
 }
 
 void MainWindow::onSocketError(QAbstractSocket::SocketError socketError)
@@ -180,3 +195,4 @@ void MainWindow::updateInfoButton()
     if (enabled) ui->b_saveInfo->setToolTip("<p><b>Note:</b> Checkboxes save the user's input in the fields.</p>");
     else ui->b_saveInfo->setToolTip("");
 }
+
