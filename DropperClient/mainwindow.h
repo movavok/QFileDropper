@@ -37,5 +37,17 @@ private slots:
     void onSocketConnected();
     void onSocketError(QAbstractSocket::SocketError);
     void slotReadyRead();
+private:
+    QFile* sendingFile = nullptr;
+    qint64 bytesSent = 0;
+    qint64 totalBytes = 0;
+    void sendNextChunk();
+    struct FileReceiveState {
+        QString fileName;
+        qint64 totalBytes = 0;
+        qint64 receivedBytes = 0;
+        QByteArray fileData;
+    };
+    FileReceiveState receiveState;
 };
 #endif // MAINWINDOW_H

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -97,16 +98,43 @@ void MainWindow::sendFile()
         ui->statusbar->showMessage("No file selected.");
         return;
     }
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
+    sendingFile = new QFile(filePath, this);
+    if (!sendingFile->open(QIODevice::ReadOnly)) {
         ui->statusbar->showMessage("Failed to open file.");
+        delete sendingFile;
+        sendingFile = nullptr;
         return;
     }
+    bytesSent = 0;
+    totalBytes = sendingFile->size();
+    ui->pb_sending->setMaximum(totalBytes);
+    ui->pb_sending->setValue(0);
+    sendNextChunk();
+}
 
-    QByteArray fileData = file.readAll();
-    file.close();
-
-    SendToServer("FILE:" + fileName, fileData);
+void MainWindow::sendNextChunk()
+{
+    if (!sendingFile) return;
+    const qint64 chunkSize = 32 * 1024; // 32KB
+    QByteArray chunk = sendingFile->read(chunkSize);
+    if (chunk.isEmpty()) {
+        sendingFile->close();
+        sendingFile->deleteLater();
+        sendingFile = nullptr;
+        return;
+    }
+    QByteArray Data;
+    QDataStream out(&Data, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+    out << quint16(0) << QString("FILE:%1:%2:%3").arg(fileName).arg(bytesSent).arg(totalBytes);
+    out << chunk;
+    out.device()->seek(0);
+    out << quint16(Data.size() - sizeof(quint16));
+    socket->write(Data);
+    bytesSent += chunk.size();
+    ui->pb_sending->setValue(bytesSent);
+    // Надсилаємо наступний chunk після підтвердження від сервера або одразу:
+    QTimer::singleShot(0, this, &MainWindow::sendNextChunk);
 }
 
 void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fileData)
@@ -127,19 +155,37 @@ void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fi
 
 void MainWindow::handleMessages(const QString& header, QDataStream& in)
 {
-    QString message = header.mid(5);
-
     if (header.startsWith("INFO:")) {
-        ui->statusbar->showMessage(message);
+        ui->statusbar->showMessage(header.mid(5));
         return;
     } else if (header.startsWith("SENT:")) {
-        ui->te_sentFiles->append(message);
+        ui->te_sentFiles->append(header.mid(5));
         return;
     } else if (header.startsWith("FILE:")) {
-        QString fileName = message;
-        QByteArray fileData;
-        in >> fileData;
-        saveReceivedFiles(fileName, fileData);
+        // Новий формат: FILE:filename:offset:total
+        QStringList parts = header.split(":");
+        if (parts.size() == 4) {
+            QString fname = parts[1];
+            qint64 offset = parts[2].toLongLong();
+            qint64 total = parts[3].toLongLong();
+            QByteArray chunk;
+            in >> chunk;
+            if (offset == 0) {
+                receiveState.fileName = fname;
+                receiveState.totalBytes = total;
+                receiveState.receivedBytes = 0;
+                receiveState.fileData.clear();
+                ui->pb_receiving->setMaximum(total);
+                ui->pb_receiving->setValue(0);
+            }
+            receiveState.fileData.append(chunk);
+            receiveState.receivedBytes += chunk.size();
+            ui->pb_receiving->setValue(receiveState.receivedBytes);
+            if (receiveState.receivedBytes >= receiveState.totalBytes) {
+                saveReceivedFiles(receiveState.fileName, receiveState.fileData);
+                receiveState = FileReceiveState();
+            }
+        }
         return;
     }
 }
