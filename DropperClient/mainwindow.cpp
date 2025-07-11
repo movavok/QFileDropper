@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    setWindowTitle("QFileDropper");
     ui->sb_port->setRange(1000, 65535);
     ui->le_ip->setInputMask("000.000.000.000;_");
     ui->statusbar->setStyleSheet("color: red;");
@@ -104,8 +105,6 @@ void MainWindow::login()
         ui->statusbar->showMessage("You have not entered the login!");
         return;
     }
-
-    saveFilds();
     
     QString ip = ui->le_ip->text();
     int port = ui->sb_port->value();
@@ -296,7 +295,9 @@ void MainWindow::slotReadyRead()
 void MainWindow::onSocketConnected()
 {
     qDebug() << "Connected to server!";
+    saveFilds();
     SendToServer(ui->le_login->text());
+    setWindowTitle("QFileDropper — " + ui->le_login->text());
     ui->stackedWidget->setCurrentIndex(1);
     ui->statusbar->clearMessage();
 }
