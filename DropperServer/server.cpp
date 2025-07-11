@@ -1,6 +1,4 @@
 #include "server.h"
-#include <QDataStream>
-#include <QDebug>
 
 QMap<QTcpSocket*, FileReceiveState> fileStates;
 
@@ -90,18 +88,17 @@ void Server::slotReadyRead()
                         fileStates.remove(socket);
                         return;
                     }
-                    qDebug() << "[SEND] File" << state.fileName << "received, forwarding to other clients...";
-                    sendFileChunks(state.fileName, state.fileData, socket);
+                    QString senderLogin = logins.value(socket, "unknown");
+                    QString fileNameForClients = senderLogin + "@" + state.fileName;
+                    qDebug() << "[SEND] File" << state.fileName << "received, forwarding to other clients as" << fileNameForClients;
+                    sendFileChunks(fileNameForClients, state.fileData, socket);
                     SendToClient("SENT:" + state.fileName, socket);
                     fileStates.remove(socket);
                 }
             }
-        } else if (header.startsWith("DISCONNECT:")) {
-            socket->disconnectFromHost();
-            qDebug() << "[DISCONNECT] User requested disconnect:" << logins.value(socket, "Unknown");
-        } else if (header == "RESET_PROGRESS") {
-            fileStates.remove(socket);
         }
+        else if (header.startsWith("DISCONNECT:")) socket->disconnectFromHost();
+        else if (header == "RESET_PROGRESS") fileStates.remove(socket);
 
         buffers[socket].remove(0, blockSize + 2);
     }
@@ -127,7 +124,7 @@ void Server::clientDisconnected()
     logins.remove(socket);
     Sockets.removeAll(socket);
     buffers.remove(socket);
-    nextBlockSizes.remove(socket);
+    fileStates.remove(socket);
     socket->deleteLater();
     qDebug() << "[DISCONNECT] User disconnected:" << login;
 }

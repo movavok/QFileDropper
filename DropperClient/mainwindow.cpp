@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -142,9 +141,9 @@ void MainWindow::sendNextChunk()
 
 void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fileData)
 {
+    if (fileName.trimmed().isEmpty() || fileData.isEmpty()) return;
     QDir dir("../../Received files");
     if (!dir.exists()) dir.mkpath(".");
-
     QString savePath = dir.filePath(fileName);
     QFile file(savePath);
     if (file.open(QIODevice::WriteOnly)) {
@@ -156,11 +155,18 @@ void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fi
     }
 }
 
+bool MainWindow::isValidReceivedFile() const {
+    return !receiveState.fileName.trimmed().isEmpty()
+        && receiveState.fileName.contains('@')
+        && !receiveState.fileName.endsWith('@')
+        && receiveState.fileData.size() == receiveState.totalBytes
+        && receiveState.receivedBytes >= receiveState.totalBytes;
+}
+
 void MainWindow::handleMessages(const QString& header, QDataStream& in)
 {
     if (header.startsWith("INFO:")) {
         ui->statusbar->showMessage(header.mid(5));
-        // Если сервер сообщает, что файл не отправлен — сбрасываем отправку
         if (header.contains("No other clients connected")) {
             if (sendingFile) {
                 sendingFile->close();
@@ -171,48 +177,57 @@ void MainWindow::handleMessages(const QString& header, QDataStream& in)
             ui->pb_sending->setValue(0);
         }
         return;
-    } else if (header == "RESET_PROGRESS") {
+    }
+    if (header == "RESET_PROGRESS") {
         ui->pb_sending->setValue(0);
-        receiveState = FileReceiveState();
-        // Также сбрасываем отправку
-        if (sendingFile) {
-            sendingFile->close();
-            sendingFile->deleteLater();
-            sendingFile = nullptr;
-        }
-        bytesSent = 0;
         return;
-    } else if (header.startsWith("SENT:")) {
+    }
+    if (header.startsWith("SENT:")) {
         ui->te_sentFiles->append(header.mid(5));
+        ui->statusbar->clearMessage();
         return;
-    } else if (header.startsWith("FILE:")) {
+    }
+    if (header.startsWith("FILE:")) {
         QStringList parts = header.split(":");
-        if (parts.size() == 4) {
-            QString fname = parts[1];
-            qint64 offset = parts[2].toLongLong();
-            qint64 total = parts[3].toLongLong();
-            QByteArray chunk;
-            in >> chunk;
-            if (offset == 0) {
-                receiveState.fileName = fname;
-                receiveState.totalBytes = total;
-                receiveState.receivedBytes = 0;
-                receiveState.fileData.clear();
-                ui->pb_receiving->setMaximum(total);
-                ui->pb_receiving->setValue(0);
-                printf("\a");
-                fflush(stdout);
-            }
-            receiveState.fileData.append(chunk);
-            receiveState.receivedBytes += chunk.size();
-            ui->pb_receiving->setValue(receiveState.receivedBytes);
-            if (receiveState.receivedBytes >= receiveState.totalBytes) {
-                saveReceivedFiles(receiveState.fileName, receiveState.fileData);
-                receiveState = FileReceiveState();
-            }
+        if (parts.size() != 4) return;
+        QString fname = parts[1];
+        qint64 offset = parts[2].toLongLong();
+        qint64 total = parts[3].toLongLong();
+        QByteArray chunk;
+        in >> chunk;
+        if (offset == 0) {
+            receiveState = FileReceiveState();
+            receiveState.fileName = fname;
+            receiveState.totalBytes = total;
+            ui->pb_receiving->setMaximum(total);
+            ui->pb_receiving->setValue(0);
+        }
+        receiveState.fileData.append(chunk);
+        receiveState.receivedBytes += chunk.size();
+        ui->pb_receiving->setValue(receiveState.receivedBytes);
+
+        if (isValidReceivedFile()) {
+            saveReceivedFiles(receiveState.fileName, receiveState.fileData);
+            ui->statusbar->clearMessage();
+            receiveState = FileReceiveState();
         }
         return;
     }
+}
+
+// Сброс всех состояний передачи
+void MainWindow::resetTransferStates() {
+    ui->pb_sending->setValue(0);
+    ui->pb_receiving->setValue(0);
+    receiveState = FileReceiveState();
+    if (sendingFile) {
+        sendingFile->close();
+        sendingFile->deleteLater();
+        sendingFile = nullptr;
+    }
+    bytesSent = 0;
+    totalBytes = 0;
+    fileName.clear();
 }
 
 void MainWindow::slotReadyRead()

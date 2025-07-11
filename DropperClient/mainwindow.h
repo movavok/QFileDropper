@@ -1,11 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
-#include <iostream>
 #include <QHostAddress>
 #include <QTcpSocket>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QTimer>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -50,5 +50,7 @@ private:
         QByteArray fileData;
     };
     FileReceiveState receiveState;
+    void resetTransferStates();
+    bool isValidReceivedFile() const;
 };
 #endif // MAINWINDOW_H
