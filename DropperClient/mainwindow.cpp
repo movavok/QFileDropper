@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->le_ip->setInputMask("000.000.000.000;_");
     ui->statusbar->setStyleSheet("color: red;");
 
+    ui->te_receivedFiles->setOpenLinks(false);
+
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
@@ -28,6 +30,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QTcpSocket::errorOccurred, this, &MainWindow::onSocketError);
 
     connect(ui->b_connect, &QPushButton::clicked, this, &MainWindow::login);
+
+    connect(ui->te_receivedFiles, &QTextBrowser::anchorClicked, this, [](const QUrl& url){
+        QDesktopServices::openUrl(url);
+    });
 }
 
 MainWindow::~MainWindow()
@@ -149,7 +155,8 @@ void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fi
     if (file.open(QIODevice::WriteOnly)) {
         file.write(fileData);
         file.close();
-        ui->te_receivedFiles->append(fileName);
+        QString fileUrl = QUrl::fromLocalFile(savePath).toString();
+        ui->te_receivedFiles->append(QString("<a href=\"%1\">%2</a>").arg(fileUrl, fileName));
     } else {
         ui->statusbar->showMessage("Failed to save file: " + file.errorString());
     }
@@ -215,7 +222,6 @@ void MainWindow::handleMessages(const QString& header, QDataStream& in)
     }
 }
 
-// Сброс всех состояний передачи
 void MainWindow::resetTransferStates() {
     ui->pb_sending->setValue(0);
     ui->pb_receiving->setValue(0);

@@ -413,7 +413,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                     </widget>
                    </item>
                    <item>
-                    <widget class="QTextEdit" name="te_receivedFiles">
+                    <widget class="QTextBrowser" name="te_receivedFiles">
                      <property name="readOnly">
                       <bool>true</bool>
                      </property>
