@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->te_receivedFiles->setOpenLinks(false);
 
     socket = new QTcpSocket(this);
+    dbManager = new DbManager(this);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 
@@ -24,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->cb_login, &QCheckBox::stateChanged, this, &MainWindow::updateInfoButton);
 
     connect(ui->b_chooseFile, &QPushButton::clicked, this, &MainWindow::chooseFile);
-    connect(ui->b_sendFile, &QPushButton::clicked, this, &MainWindow::sendFile);
+    connect(ui->b_sendFile,   &QPushButton::clicked, this, &MainWindow::sendFile);
 
     connect(socket, &QTcpSocket::connected, this, &MainWindow::onSocketConnected);
     connect(socket, &QTcpSocket::errorOccurred, this, &MainWindow::onSocketError);
@@ -34,6 +35,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->te_receivedFiles, &QTextBrowser::anchorClicked, this, [](const QUrl& url){
         QDesktopServices::openUrl(url);
     });
+
+    initCheckBoxes();
+    loadFilds();
 }
 
 MainWindow::~MainWindow()
@@ -70,6 +74,30 @@ void MainWindow::SendToServer(const QString& header, const QByteArray& fileData)
     socket->write(Data);
 }
 
+void MainWindow::initCheckBoxes()
+{
+    if (dbManager->isFieldSet("ip")) ui->cb_ip->setChecked(true);
+    if (dbManager->isFieldSet("port")) ui->cb_port->setChecked(true);
+    if (dbManager->isFieldSet("login")) ui->cb_login->setChecked(true);
+}
+
+void MainWindow::loadFilds()
+{
+    ui->le_ip->setText(dbManager->loadField("ip"));
+    ui->sb_port->setValue(dbManager->loadField("port").toInt());
+    ui->le_login->setText(dbManager->loadField("login"));
+}
+
+void MainWindow::saveFilds()
+{
+    if (ui->cb_ip->isChecked()) dbManager->saveField("ip", ui->le_ip->text());
+    else dbManager->deleteField("ip");
+    if (ui->cb_port->isChecked()) dbManager->saveField("port", QString::number(ui->sb_port->value()));
+    else dbManager->deleteField("port");
+    if (ui->cb_login->isChecked()) dbManager->saveField("login", ui->le_login->text());
+    else dbManager->deleteField("login");
+}
+
 void MainWindow::login()
 {
     if (ui->le_login->text().isEmpty()) {
@@ -77,6 +105,8 @@ void MainWindow::login()
         return;
     }
 
+    saveFilds();
+    
     QString ip = ui->le_ip->text();
     int port = ui->sb_port->value();
 

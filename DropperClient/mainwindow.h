@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QTimer>
 #include <QDesktopServices>
+#include <dbmanager.h>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -23,11 +24,15 @@ protected:
 private:
     Ui::MainWindow *ui;
     QTcpSocket *socket;
+    DbManager *dbManager;
     QByteArray buffer;
     QString fileName;
     QString filePath;
     quint16 nextBlockSize = 0;
     void SendToServer(const QString&, const QByteArray& = QByteArray());
+    void initCheckBoxes();
+    void loadFilds();
+    void saveFilds();
     void saveReceivedFiles(const QString&, const QByteArray&);
     void handleMessages(const QString&, QDataStream&);
 private slots:
