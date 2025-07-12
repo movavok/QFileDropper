@@ -1,7 +1,5 @@
 #include "server.h"
 
-QMap<QTcpSocket*, FileReceiveState> fileStates;
-
 Server::Server()
 {
     if (this->listen(QHostAddress::Any, 8081)) qDebug() << "[INFO] Server started";
