@@ -19,6 +19,119 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resourses/icon.qrc">
+    <normaloff>:/images/round_icon.png</normaloff>:/images/round_icon.png</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget {
+    background-color: #eef0fa;
+    color: #2e2e2e;
+    font-family: &quot;Segoe UI&quot;, sans-serif;
+    font-size: 10pt;
+}
+
+/* GroupBox */
+QGroupBox {
+    border: 1px solid #b0b0c0;
+    border-radius: 5px;
+    margin-top: 16px; /* під заголовок */
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 6px;
+    margin-top: -6px; /* ще вище */
+    background-color: transparent;
+    color: #3a3a4a;
+    font-weight: bold;
+}
+
+/* Кнопки */
+QPushButton {
+    background-color: #dcdff1;
+    border: 1px solid #9fa3c1;
+    border-radius: 3px;
+    padding: 4px 10px;
+}
+QPushButton:hover {
+    background-color: #cfd2e6;
+}
+
+/* Info-кнопка — активна */
+QPushButton#b_saveInfo:enabled {
+    background-color: #e1e3f2;
+    border: 1px solid #a0a2b0;
+    border-radius: 2px;
+    font-size: 10pt;
+    font-weight: bold;
+    min-width: 18px;
+    min-height: 18px;
+    max-width: 18px;
+    max-height: 18px;
+    padding: 0;
+    color: #444;
+}
+
+/* Info-кнопка — неактивна */
+QPushButton#b_saveInfo:disabled {
+    background-color: #d6d7e0;
+    border: 1px solid #b0b0b8;
+    border-radius: 2px;
+    font-size: 10pt;
+    font-weight: bold;
+    min-width: 18px;
+    min-height: 18px;
+    max-width: 18px;
+    max-height: 18px;
+    padding: 0;
+    color: #888;
+}
+
+/* LineEdit / SpinBox / CheckBox — не білі, а легкі сірі */
+QLineEdit, QSpinBox {
+    background-color: #f2f3f7;
+    border: 1px solid #a4a4b4;
+    border-radius: 2px;
+    padding: 3px;
+}
+
+QCheckBox {
+    spacing: 4px;
+    background-color: #f2f3f7;
+}
+
+/* Текстові поля */
+QTextEdit, QTextBrowser {
+    background-color: #f2f3f7;
+    border: 1px solid #bbbbcc;
+    border-radius: 2px;
+    padding: 4px;
+}
+
+/* Прогрес-бари */
+QProgressBar {
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    background-color: #e2e2f0;
+    text-align: center;
+    color: #333;
+}
+
+/* Sending */
+#pb_sending::chunk {
+    background-color: #9ac8f0;
+    border-radius: 6px;
+}
+
+/* Receiving */
+#pb_receiving::chunk {
+    background-color: #b2e5b2;
+    border-radius: 6px;
+}
+</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_13">
     <item>
@@ -343,8 +456,8 @@ p, li { white-space: pre-wrap; }
 hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI','sans-serif'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:9pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                      </property>
                     </widget>
                    </item>
@@ -424,8 +537,8 @@ p, li { white-space: pre-wrap; }
 hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI','sans-serif'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:9pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                      </property>
                     </widget>
                    </item>
@@ -479,7 +592,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <x>0</x>
      <y>0</y>
      <width>661</width>
-     <height>26</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpen_new">
@@ -496,6 +609,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resourses/icon.qrc"/>
+ </resources>
  <connections/>
 </ui>
