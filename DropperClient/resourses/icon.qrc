@@ -4,4 +4,8 @@
         <file>empty_icon.png</file>
         <file>round_icon.png</file>
     </qresource>
+    <qresource prefix="/sounds">
+        <file>cancel.wav</file>
+        <file>success.wav</file>
+    </qresource>
 </RCC>

@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     socket = new QTcpSocket(this);
     dbManager = new DbManager(this);
+
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 
@@ -37,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
         QDesktopServices::openUrl(url);
     });
 
+    initSounds();
     initCheckBoxes();
     loadFilds();
 }
@@ -73,6 +75,17 @@ void MainWindow::SendToServer(const QString& header, const QByteArray& fileData)
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
+}
+
+void MainWindow::initSounds()
+{
+    successSound = new QSoundEffect(this);
+    successSound->setSource(QUrl("qrc:/sounds/success.wav"));
+    successSound->setVolume(0.8);
+
+    cancelSound = new QSoundEffect(this);
+    cancelSound->setSource(QUrl("qrc:/sounds/cancel.wav"));
+    cancelSound->setVolume(0.8);
 }
 
 void MainWindow::initCheckBoxes()
@@ -186,6 +199,8 @@ void MainWindow::saveReceivedFiles(const QString& fileName, const QByteArray& fi
         file.close();
         QString fileUrl = QUrl::fromLocalFile(savePath).toString();
         ui->te_receivedFiles->append(QString("<a href=\"%1\">%2</a>").arg(fileUrl, fileName));
+        successSound->stop();
+        successSound->play();
     } else {
         ui->statusbar->showMessage("Failed to save file: " + file.errorString());
     }
@@ -216,6 +231,8 @@ void MainWindow::handleMessages(const QString& header, QDataStream& in)
     }
     if (header == "RESET_PROGRESS") {
         ui->pb_sending->setValue(0);
+        cancelSound->stop();
+        cancelSound->play();
         return;
     }
     if (header.startsWith("SENT:")) {
