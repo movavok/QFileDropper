@@ -4,7 +4,7 @@ DbManager::DbManager(QObject *parent)
     : QObject{parent}
 {
     db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("../../settings.db");
+    db.setDatabaseName("settings.db");
     if (!db.open()) {
         qDebug() << "Cannot open database:" << db.lastError().text();
     } else {

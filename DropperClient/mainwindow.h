@@ -55,10 +55,11 @@ private:
     FileReceiveState receiveState;
 
     void SendToServer(const QString& header, const QByteArray& fileData = QByteArray());
+    void initConnections();
     void initSounds();
     void initCheckBoxes();
-    void loadFilds();
-    void saveFilds();
+    void loadFields();
+    void saveFields();
     void saveReceivedFiles(const QString& fileName, const QByteArray& fileData);
     void handleMessages(const QString& header, QDataStream& in);
     void sendNextChunk();
